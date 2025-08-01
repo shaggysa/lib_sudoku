@@ -1,0 +1,4 @@
+#Sudoku-Rust
+A rusty take on my sudoku solving program.
+
+It can solve 9 million puzzles in under 2 minutes.
