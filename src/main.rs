@@ -1,8 +1,5 @@
-use std::collections::{HashMap, HashSet};
-use std::fs;
-use std::fs::copy;
+use std::{env, fs};
 use std::io::{stdout, Write};
-use std::path::Component::ParentDir;
 use tokio;
 
 struct Puzzle {
@@ -20,7 +17,7 @@ struct Puzzles {
     unsolved: Vec<[u8; 81]>,
     solved: Vec<[u8; 81]>,
 }
-fn get_puzzles(file:&str) -> Puzzles {
+fn get_puzzles(file: String) -> Puzzles {
     let mut p = Puzzles {
         size: 0,
         unsolved: vec![],
@@ -247,11 +244,17 @@ fn synchronous_speedtest(puzzles : Puzzles) {
 
 #[tokio::main]
 async fn main() {
-    let start_time = std::time::Instant::now();
-    let puzzles = get_puzzles("puzzles_big.csv");
-    println!("Loaded {} puzzles in {:?}", puzzles.size, start_time.elapsed());
-    async_speedtest(puzzles.clone()).await;
-    synchronous_speedtest(puzzles);
+    if env::args().count() < 2 {
+        println!("Please provide an argument with the name of the file containing your puzzles");
+    } else {
+        let start_time = std::time::Instant::now();
+        let puzzles = get_puzzles(env::args().nth(1).unwrap());
+        println!("Loaded {} puzzles in {:?}", puzzles.size, start_time.elapsed());
+        async_speedtest(puzzles.clone()).await;
+        synchronous_speedtest(puzzles);
+    }
+
+
 }
 
 

@@ -2,3 +2,5 @@
 A rusty take on my sudoku solving program.
 
 It can solve 9 million puzzles in under 2 minutes.
+
+To use, clone the repo and run the command "cargo run {file}". Note that the file must be a csv in the format puzzle,solution. To run with the preloaded puzzles, use the command "cargo run puzzles.csv".
