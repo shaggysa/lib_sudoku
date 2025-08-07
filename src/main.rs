@@ -205,7 +205,7 @@ fn print_puzz(puzz : &[u8]) {
     lock.flush().unwrap();
 }
 
-async fn async_speedtest(puzzles: Puzzles) {
+async fn tokio_speedtest(puzzles: Puzzles) {
     println!("---------------\nStarting Async (tokio) Speedtest\n---------------");
     let start_solve = std::time::Instant::now();
 
@@ -224,6 +224,7 @@ async fn async_speedtest(puzzles: Puzzles) {
     }
     println!("Solved {} Puzzles in {:?}", puzzles.size, solve_time);
     }
+
 
 fn synchronous_speedtest(puzzles : Puzzles) {
     println!("---------------\nStarting Synchronous Speedtest\n---------------");
@@ -250,7 +251,7 @@ async fn main() {
         let start_time = std::time::Instant::now();
         let puzzles = get_puzzles(env::args().nth(1).unwrap());
         println!("Loaded {} puzzles in {:?}", puzzles.size, start_time.elapsed());
-        async_speedtest(puzzles.clone()).await;
+        tokio_speedtest(puzzles.clone()).await;
         synchronous_speedtest(puzzles);
     }
 
