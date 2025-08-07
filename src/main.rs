@@ -245,17 +245,19 @@ fn synchronous_speedtest(puzzles : Puzzles) {
 
 #[tokio::main]
 async fn main() {
+    let puzzles: Puzzles;
     if env::args().count() < 2 {
-        println!("Please provide an argument with the name of the file containing your puzzles");
+        println!("No puzzle file argument found, using default.");
+        let start_time = std::time::Instant::now();
+        puzzles = get_puzzles("puzzles.csv".parse().unwrap());
+        println!("Loaded {} puzzles in {:?}", puzzles.size, start_time.elapsed());
     } else {
         let start_time = std::time::Instant::now();
-        let puzzles = get_puzzles(env::args().nth(1).unwrap());
+        puzzles = get_puzzles(env::args().nth(1).unwrap());
         println!("Loaded {} puzzles in {:?}", puzzles.size, start_time.elapsed());
-        tokio_speedtest(puzzles.clone()).await;
-        synchronous_speedtest(puzzles);
     }
-
-
+    tokio_speedtest(puzzles.clone()).await;
+    synchronous_speedtest(puzzles);
 }
 
 
