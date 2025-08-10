@@ -1,19 +1,19 @@
+use pyo3::PyResult;
 struct Puzzle {
-    puzz: [u8; 81],
+    puzz: Vec<u8>,
     blank_positions: Vec<u8>,
     possibilities: Vec<Vec<u8>>,
-    cached_possibilities: Vec<[bool;10]>,
+    cached_possibilities: Vec<[bool; 10]>,
     current_pos: Vec<i8>,
     solved: bool,
-
 }
-fn get_possibilities(puzz: &[u8; 81], pos:u8) -> Vec<u8> {
-    let mut possibilities:Vec<u8> = Vec::new();
-    let mut seen: [bool;10] = [false;10];
+fn get_possibilities(puzz: &Vec<u8>, pos: u8) -> Vec<u8> {
+    let mut possibilities: Vec<u8> = Vec::new();
+    let mut seen: [bool; 10] = [false; 10];
     let row: usize = (pos / 9) as usize;
     let col: usize = (pos % 9) as usize;
-    let root_row = (row/3) * 3;
-    let root_col = (col/3) * 3;
+    let root_row = (row / 3) * 3;
+    let root_col = (col / 3) * 3;
 
     for r in root_row..root_row + 3 {
         for c in root_col..root_col + 3 {
@@ -21,8 +21,8 @@ fn get_possibilities(puzz: &[u8; 81], pos:u8) -> Vec<u8> {
         }
     }
     for i in 0..9 {
-        seen[puzz[i + (row*9)] as usize] = true;
-        seen[puzz[col+(i*9)] as usize] = true;
+        seen[puzz[i + (row * 9)] as usize] = true;
+        seen[puzz[col + (i * 9)] as usize] = true;
     }
 
     for i in 1..10 {
@@ -32,15 +32,22 @@ fn get_possibilities(puzz: &[u8; 81], pos:u8) -> Vec<u8> {
     }
     possibilities
 }
-fn solver_prep(puzz:[u8;81]) -> Puzzle {
-    let mut p: Puzzle = Puzzle {puzz, blank_positions: Vec::new(), possibilities: Vec::new(), cached_possibilities: Vec::new(), current_pos: Vec::new(), solved: false};
+fn solver_prep(puzz: Vec<u8>) -> Puzzle {
+    let mut p: Puzzle = Puzzle {
+        puzz,
+        blank_positions: Vec::new(),
+        possibilities: Vec::new(),
+        cached_possibilities: Vec::new(),
+        current_pos: Vec::new(),
+        solved: false,
+    };
     for i in 0..81 {
         if p.puzz[i] == 0 {
             p.blank_positions.push(i as u8);
         }
     }
     loop {
-        let mut to_remove:Vec<u8> = Vec::new();
+        let mut to_remove: Vec<u8> = Vec::new();
         let mut progressed = false;
         for i in p.blank_positions.iter().rev() {
             let possibilities = get_possibilities(&p.puzz, *i);
@@ -55,7 +62,7 @@ fn solver_prep(puzz:[u8;81]) -> Puzzle {
                 if let Some(&last_item) = to_remove.last() {
                     if x == last_item {
                         to_remove.pop();
-                        return false
+                        return false;
                     }
                 }
                 true
@@ -65,7 +72,8 @@ fn solver_prep(puzz:[u8;81]) -> Puzzle {
                 p.solved = true;
             } else {
                 for i in 0..p.blank_positions.len() {
-                    p.possibilities.push(get_possibilities(&p.puzz, p.blank_positions[i]));
+                    p.possibilities
+                        .push(get_possibilities(&p.puzz, p.blank_positions[i]));
                     p.current_pos.push(-1);
                 }
             }
@@ -75,12 +83,12 @@ fn solver_prep(puzz:[u8;81]) -> Puzzle {
     p
 }
 
-fn get_possibilities_as_array(puzz : &[u8; 81], pos : usize) -> [bool; 10] {
-    let mut seen: [bool;10] = [true;10];
+fn get_possibilities_as_array(puzz: &Vec<u8>, pos: usize) -> [bool; 10] {
+    let mut seen: [bool; 10] = [true; 10];
     let row: usize = pos / 9;
     let col: usize = pos % 9;
-    let root_row = (row/3) * 3;
-    let root_col = (col/3) * 3;
+    let root_row = (row / 3) * 3;
+    let root_col = (col / 3) * 3;
 
     for r in root_row..root_row + 3 {
         for c in root_col..root_col + 3 {
@@ -88,16 +96,16 @@ fn get_possibilities_as_array(puzz : &[u8; 81], pos : usize) -> [bool; 10] {
         }
     }
     for i in 0..9 {
-        seen[puzz[i + (row*9)] as usize] = false;
-        seen[puzz[col+(i*9)] as usize] = false;
+        seen[puzz[i + (row * 9)] as usize] = false;
+        seen[puzz[col + (i * 9)] as usize] = false;
     }
     seen
 }
 
-pub fn solve(puzz : [u8;81]) -> [u8;81] {
+pub fn solve(puzz: Vec<u8>) -> PyResult<Vec<u8>> {
     let mut p = solver_prep(puzz);
     if p.solved {
-        return p.puzz
+        return Ok(p.puzz);
     }
 
     let mut position: i8 = 0;
@@ -105,11 +113,10 @@ pub fn solve(puzz : [u8;81]) -> [u8;81] {
     let mut progressed_forward = true;
     loop {
         if position < 0 {
-            println!("Puzzle is unsolvable!");
-            return [0; 81]
+            return Err(pyo3::exceptions::PyValueError::new_err(format!("The following puzzle is unsolvable!\n{:?}", p.puzz)));
         } else if position == max_pos as i8 {
             p.solved = true;
-            return p.puzz
+            return Ok(p.puzz);
         }
         let pos_usize = position as usize;
         let spot = p.blank_positions[pos_usize];
@@ -117,15 +124,20 @@ pub fn solve(puzz : [u8;81]) -> [u8;81] {
         let mut failed = true;
         if progressed_forward {
             if pos_usize == p.cached_possibilities.len() {
-                p.cached_possibilities.push(get_possibilities_as_array(&p.puzz, spot as usize));
+                p.cached_possibilities
+                    .push(get_possibilities_as_array(&p.puzz, spot as usize));
             } else {
-                p.cached_possibilities[pos_usize] = get_possibilities_as_array(&p.puzz, spot as usize);
+                p.cached_possibilities[pos_usize] =
+                    get_possibilities_as_array(&p.puzz, spot as usize);
             }
         }
         while p.current_pos[pos_usize] < max as i8 {
             p.current_pos[pos_usize] += 1;
-            if p.cached_possibilities[pos_usize][p.possibilities[pos_usize][p.current_pos[pos_usize] as usize] as usize] {
-                p.puzz[spot as usize] = p.possibilities[pos_usize][p.current_pos[pos_usize] as usize];
+            if p.cached_possibilities[pos_usize]
+                [p.possibilities[pos_usize][p.current_pos[pos_usize] as usize] as usize]
+            {
+                p.puzz[spot as usize] =
+                    p.possibilities[pos_usize][p.current_pos[pos_usize] as usize];
                 failed = false;
                 position += 1;
                 progressed_forward = true;
@@ -141,6 +153,6 @@ pub fn solve(puzz : [u8;81]) -> [u8;81] {
     }
 }
 
-pub async fn async_solve(puzz : [u8;81]) -> [u8;81] {
+pub async fn async_solve(puzz: Vec<u8>) -> PyResult<Vec<u8>> {
     solve(puzz)
 }
