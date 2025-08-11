@@ -1,14 +1,14 @@
 [package]
-name = "sudoku-lib"
+name = "lib-sudoku"
 version = "0.1.0"
 edition = "2024"
 
 [[bin]]
-name = "sudoku-lib"
+name = "lib-sudoku"
 path = "src/main.rs"
 
 [lib]
-name = "sudoku_lib"
+name = "lib_sudoku"
 crate-type = ["cdylib"]
 
 

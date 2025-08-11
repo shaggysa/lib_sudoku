@@ -3,7 +3,7 @@ struct Puzzle {
     puzz: Vec<u8>,
     blank_positions: Vec<u8>,
     possibilities: Vec<Vec<u8>>,
-    cached_possibilities: Vec<[bool; 10]>,
+    cached_possibilities: Vec<[bool;10]>,
     current_pos: Vec<i8>,
     solved: bool,
 }

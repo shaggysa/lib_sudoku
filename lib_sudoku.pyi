@@ -1,4 +1,4 @@
-from .sudoku_lib import *
+from .lib_sudoku import *
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
