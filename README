@@ -1,4 +1,4 @@
-## sudoku_lib
+## lib_sudoku
 
 A python library for solving sudoku puzzles written in Rust.
 
@@ -7,7 +7,7 @@ It can read and solve 9 million puzzles in under 10 seconds.
 ## Installation
 
 Currently, you must compile the source code yourself with maturin. To do this, simply install maturin with pip and run the command "maturin build --release" in the project folder.
-It will generate a wheel in /target/wheels. To add this library to python, run "pip install target/wheels/sudoku_lib*.whl".
+It will generate a wheel in /target/wheels. To add this library to python, run "pip install target/wheels/lib_sudoku*.whl".
 
 ## Usage
 
