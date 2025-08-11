@@ -1,4 +1,4 @@
-use pyo3::PyResult;
+use pyo3::{pyfunction, PyResult};
 struct Puzzle {
     puzz: Vec<u8>,
     blank_positions: Vec<u8>,
@@ -101,8 +101,12 @@ fn get_possibilities_as_array(puzz: &Vec<u8>, pos: usize) -> [bool; 10] {
     }
     seen
 }
-
+#[pyfunction]
 pub fn solve(puzz: Vec<u8>) -> PyResult<Vec<u8>> {
+    if puzz.len() != 81 {
+        return Err(pyo3::exceptions::PyValueError::new_err("A puzzle must have a length of 81!"));
+    }
+
     let mut p = solver_prep(puzz);
     if p.solved {
         return Ok(p.puzz);
