@@ -48,3 +48,7 @@ Note that the less hints you want in your unsolved puzzle, the longer it will ta
 In my testing, it usually takes under a millisecond to generate a puzzle with 30 hints, but it can take up to 50ms for a puzzle with 24 hints.
 
 Generating puzzles with under 23 hints does not work because it will get stuck.
+
+Note: If you want to try out the speedtest function on the large (9 million puzzle dataset), you can download it at https://www.kaggle.com/datasets/rohanrao/sudoku.
+
+Just make sure to move the extracted file into your working directory and to adjust the PuzzleReader class parameters to be (sudoku.csv, False)
