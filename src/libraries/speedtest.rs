@@ -5,7 +5,7 @@ use crate::libraries::puzzle_solver::{async_solve, solve};
 
 #[pyfunction]
 #[pyo3(signature = (puzzle_reader, verbose = false))]
-pub fn async_speedtest(puzzle_reader: puzzle_reader::PuzzleReader, verbose: bool) {
+pub fn async_speedtest(puzzle_reader: &puzzle_reader::PuzzleReader, verbose: bool) {
 
     println!("---------------\nStarting Async Speedtest\n---------------");
     let start_solve = std::time::Instant::now();
@@ -64,7 +64,7 @@ pub fn async_speedtest(puzzle_reader: puzzle_reader::PuzzleReader, verbose: bool
 
 #[pyfunction]
 #[pyo3(signature = (puzzle_reader, verbose = false))]
-pub fn synchronous_speedtest(puzzle_reader: puzzle_reader::PuzzleReader, verbose: bool) {
+pub fn synchronous_speedtest(puzzle_reader: &puzzle_reader::PuzzleReader, verbose: bool) {
     println!("---------------\nStarting Synchronous Speedtest\n---------------");
     let mut solved_puzzles = Vec::new();
     let start_solve = std::time::Instant::now();
