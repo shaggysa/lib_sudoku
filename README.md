@@ -6,8 +6,18 @@ It can read and solve 9 million puzzles in under 10 seconds.
 
 ## Installation
 
-Currently, you must compile the source code yourself with maturin. To do this, simply install maturin with pip and run the command "maturin build --release" in the project folder.
-It will generate a wheel in /target/wheels. To add this library to python, run "pip install target/wheels/lib_sudoku*.whl".
+For easy installation, run:
+```bash
+pip install lib_sudoku
+```
+
+If you prefer, you can build the code yourself from source. To do this, run
+```bash
+git clone https://github.com/shaggysa/lib_sudoku.git
+cd lib_sudoku
+maturin build --release
+pip install target/wheels/lib_sudoku*.whl
+```
 
 ## Basic Usage
 
@@ -15,28 +25,28 @@ A solver function, generator function, and reader class are currently available.
 
 First, import the sudoku library and the time library:
 
-```
+```python
 import lib_sudoku as sudoku
 import time
 ```
 
 Then, create a puzzle reader class with the puzzles you want to solve:
 
-```
+```python
 reader = sudoku.PuzzleReader("https://raw.githubusercontent.com/shaggysa/lib_sudoku/master/puzzles.csv", True)
 ```
 
 To test the solver, run a speedtest function and pass in the solver:
 
-```
+```python
 sudoku.async_speedtest(reader)
 sudoku.synchronous_speedtest(reader)
 ```
 
 To test the generator, simply call the gen_unsolved function and pass in the number of hints you want the final puzzle to have
 
-you can also time it if you would like: 
-```
+you can also time it if you would like:
+```python
 num_hints = 24
 start_gen = time.time()
 sudoku.gen_unsolved(num_hints)
