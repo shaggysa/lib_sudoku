@@ -1,8 +1,8 @@
-use pyo3::{PyResult, pyclass, pyfunction, pymethods};
+use pyo3::{PyResult, pyclass, PyErr, pyfunction, pymethods};
 use std::io::{Write, stdout};
 
-#[derive(Clone)]
 #[pyclass]
+#[derive(Clone)]
 pub struct PuzzleReader {
     pub size: usize,
     pub unsolved: Vec<Vec<u8>>,
@@ -12,16 +12,35 @@ pub struct PuzzleReader {
 #[pymethods]
 impl PuzzleReader {
     #[new]
-    pub fn load_puzzles(file: String) -> PyResult<Self> {
-        let start = std::time::Instant::now();
+    pub fn load_puzzles(file: &str, from_url: bool) -> PyResult<Self> {
+
         let mut p = PuzzleReader {
             size: 0,
             unsolved: Vec::new(),
             solved: Vec::new(),
         };
-        let puzzles_string = std::fs::read_to_string(&file);
+
+        let puzzles_string: String;
+
+        if from_url {
+            let download_start = std::time::Instant::now();
+            puzzles_string = ureq::get(file)
+                .call()
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?
+                .body_mut()
+                .read_to_string().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+            println!("Downloaded {} in {:?}", file, download_start.elapsed());
+        }
+
+        else {
+            let read_start = std::time::Instant::now();
+            puzzles_string = std::fs::read_to_string(&file)?;
+            println!("Read {} in {:?}", file, read_start.elapsed());
+        }
+
+        let parse_start = std::time::Instant::now();
         let mut first_line = true;
-        for line in puzzles_string?.lines() {
+        for line in puzzles_string.lines() {
             if first_line {
                 first_line = false;
                 continue;
@@ -40,11 +59,11 @@ impl PuzzleReader {
                 p.unsolved.push(unsolved_list);
                 p.solved.push(solved_list);
             } else {
-                return Err::<Self, pyo3::PyErr>(pyo3::exceptions::PyValueError::new_err(format!("Line {} in {} is malformed:{}", p.size+1, &file, line)));
+                return Err::<Self, PyErr>(pyo3::exceptions::PyValueError::new_err(format!("Line {} in {} is malformed:{}", p.size+1, file, line)));
             }
 
         }
-        println!("Read {} puzzles in {:?}.", p.size, start.elapsed());
+        println!("Parsed {} puzzles in {:?}.", p.size, parse_start.elapsed());
         Ok(p)
     }
 

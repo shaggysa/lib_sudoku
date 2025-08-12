@@ -1,13 +1,18 @@
-use pyo3::{pyfunction, PyResult};
-pub(crate) struct Puzzle { 
-    pub puzz: Vec<u8>,
-    pub blank_positions: Vec<u8>,
-    pub possibilities: Vec<Vec<u8>>,
-    pub cached_possibilities: Vec<[bool;10]>,
-    pub current_pos: Vec<i8>,
-    pub solved: bool,
+use std::cmp::PartialEq;
+use pyo3::PyResult;
+use rand::Rng;
+use rand::seq::SliceRandom;
+use crate::libraries::puzzle_solver;
+use puzzle_solver::Puzzle;
+use crate::libraries::puzzle_generator::Order::{RANDOM, REVERSE};
+
+#[derive(PartialEq)]
+pub enum Order {
+    REVERSE,
+    RANDOM,
 }
-pub(crate) fn get_possibilities(puzz: &Vec<u8>, pos: u8) -> Vec<u8> {
+
+fn alt_get_possibilities(puzz: &Vec<u8>, pos: u8, order: &Order) -> Vec<u8> {
     let mut possibilities: Vec<u8> = Vec::new();
     let mut seen: [bool; 10] = [false; 10];
     let row: usize = (pos / 9) as usize;
@@ -24,15 +29,27 @@ pub(crate) fn get_possibilities(puzz: &Vec<u8>, pos: u8) -> Vec<u8> {
         seen[puzz[i + (row * 9)] as usize] = true;
         seen[puzz[col + (i * 9)] as usize] = true;
     }
-    
-    for i in 1..10 {
-        if !seen[i as usize] {
-            possibilities.push(i)
+
+    if *order == REVERSE {
+        for i in (1..10).rev() {
+            if !seen[i as usize] {
+                possibilities.push(i)
+            }
+        }
+    }
+    else if *order == RANDOM {
+        let mut nums: Vec<u8> = (1..10).collect();
+        nums.shuffle(&mut rand::rng());
+        for i in nums.iter() {
+            if !seen[*i as usize] {
+                possibilities.push(*i)
+            }
         }
     }
     possibilities
 }
-fn solver_prep(puzz: Vec<u8>) -> Puzzle {
+
+fn alt_solver_prep(puzz: Vec<u8>, order: Order) -> Puzzle {
     let mut p: Puzzle = Puzzle {
         puzz,
         blank_positions: Vec::new(),
@@ -50,7 +67,7 @@ fn solver_prep(puzz: Vec<u8>) -> Puzzle {
         let mut to_remove: Vec<u8> = Vec::new();
         let mut progressed = false;
         for i in p.blank_positions.iter().rev() {
-            let possibilities = get_possibilities(&p.puzz, *i);
+            let possibilities = puzzle_solver::get_possibilities(&p.puzz, *i);
             if possibilities.len() == 1 {
                 p.puzz[*i as usize] = possibilities[0];
                 to_remove.push(*i);
@@ -73,7 +90,7 @@ fn solver_prep(puzz: Vec<u8>) -> Puzzle {
             } else {
                 for i in 0..p.blank_positions.len() {
                     p.possibilities
-                        .push(get_possibilities(&p.puzz, p.blank_positions[i]));
+                        .push(alt_get_possibilities(&p.puzz, p.blank_positions[i], &order));
                     p.current_pos.push(-1);
                 }
             }
@@ -83,31 +100,12 @@ fn solver_prep(puzz: Vec<u8>) -> Puzzle {
     p
 }
 
-pub(crate) fn get_possibilities_as_array(puzz: &Vec<u8>, pos: usize) -> [bool; 10] {
-    let mut seen: [bool; 10] = [true; 10];
-    let row: usize = pos / 9;
-    let col: usize = pos % 9;
-    let root_row = (row / 3) * 3;
-    let root_col = (col / 3) * 3;
-
-    for r in root_row..root_row + 3 {
-        for c in root_col..root_col + 3 {
-            seen[puzz[r * 9 + c] as usize] = false;
-        }
-    }
-    for i in 0..9 {
-        seen[puzz[i + (row * 9)] as usize] = false;
-        seen[puzz[col + (i * 9)] as usize] = false;
-    }
-    seen
-}
-#[pyfunction]
-pub fn solve(puzz: Vec<u8>) -> PyResult<Vec<u8>> {
+pub fn alt_solve(puzz: Vec<u8>, order: Order) -> PyResult<Vec<u8>> {
     if puzz.len() != 81 {
         return Err(pyo3::exceptions::PyValueError::new_err("A puzzle must have a length of 81!"));
     }
 
-    let mut p = solver_prep(puzz);
+    let mut p = alt_solver_prep(puzz, order);
     if p.solved {
         return Ok(p.puzz);
     }
@@ -129,10 +127,10 @@ pub fn solve(puzz: Vec<u8>) -> PyResult<Vec<u8>> {
         if progressed_forward {
             if pos_usize == p.cached_possibilities.len() {
                 p.cached_possibilities
-                    .push(get_possibilities_as_array(&p.puzz, spot as usize));
+                    .push(puzzle_solver::get_possibilities_as_array(&p.puzz, spot as usize));
             } else {
                 p.cached_possibilities[pos_usize] =
-                    get_possibilities_as_array(&p.puzz, spot as usize);
+                    puzzle_solver::get_possibilities_as_array(&p.puzz, spot as usize);
             }
         }
         while p.current_pos[pos_usize] < max as i8 {
@@ -157,6 +155,45 @@ pub fn solve(puzz: Vec<u8>) -> PyResult<Vec<u8>> {
     }
 }
 
-pub async fn async_solve(puzz: Vec<u8>) -> PyResult<Vec<u8>> {
-    solve(puzz)
+fn gen_random_solved() -> Vec<u8> {
+    let puzzle: Vec<u8> = vec![0; 81];
+    alt_solve(puzzle, RANDOM).unwrap()
+}
+
+fn is_legal(puzzle: &Vec<u8>) -> bool {
+    puzzle_solver::solve(puzzle.clone()).unwrap() == alt_solve(puzzle.clone(), REVERSE).unwrap()
+}
+
+#[pyo3::pyfunction]
+pub fn gen_unsolved(num_hints: usize) -> PyResult<Vec<u8>> {
+
+    if num_hints < 23 || num_hints > 40 {
+        return Err(pyo3::exceptions::PyValueError::new_err("Please specify a value between 23 and 40 for num_hints."));
+    }
+
+    let rng = &mut rand::rng();
+
+    let mut puzzle = gen_random_solved();
+    let mut filled: Vec<usize> = (0..81).collect();
+    let mut num_filled = 81;
+
+    while num_filled > num_hints {
+        if filled.is_empty() {
+            println!("Generator got stuck at {} hints! Restarting.", num_filled);
+            puzzle = gen_random_solved();
+            filled = (0..81).collect();
+            num_filled = 81;
+        }
+        let num = rng.random_range(..filled.len());
+        let old = puzzle[filled[num]];
+        puzzle[filled[num]] = 0;
+
+        if is_legal(&puzzle) {
+            num_filled -= 1;
+        } else {
+            puzzle[filled[num]] = old;
+        }
+        filled.remove(num);
+    }
+    return Ok(puzzle);
 }
