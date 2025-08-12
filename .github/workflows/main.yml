@@ -55,3 +55,17 @@ jobs:
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           packages-dir: dist/
+
+  publish_source:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install maturin twine
+      - run: maturin sdist --out dist
+      - run: twine upload dist/* -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
