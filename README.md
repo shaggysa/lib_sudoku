@@ -36,7 +36,7 @@ Then, create a puzzle reader class with the puzzles you want to solve:
 reader = sudoku.PuzzleReader("https://raw.githubusercontent.com/shaggysa/lib_sudoku/master/puzzles.csv", True)
 ```
 
-To test the solver, run a speedtest function and pass in the solver:
+To test the solver, run a speedtest function and pass in the reader:
 
 ```python
 sudoku.async_speedtest(reader)
