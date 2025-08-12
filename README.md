@@ -1,6 +1,6 @@
 # lib_sudoku
 
-A python library for solving sudoku puzzles written in Rust.
+A python library built in rust to read, solve, and generate sudoku puzzles.
 
 It can read and solve 9 million puzzles in under 10 seconds.
 
