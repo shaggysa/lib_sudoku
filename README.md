@@ -51,4 +51,4 @@ Generating puzzles with under 23 hints does not work because it will get stuck.
 
 Note: If you want to try out the speedtest function on the large (9 million puzzle dataset), you can download it at https://www.kaggle.com/datasets/rohanrao/sudoku.
 
-Just make sure to move the extracted file into your working directory and to adjust the PuzzleReader class parameters to be (sudoku.csv, False)
+Just make sure to move the extracted file into your working directory and to adjust the PuzzleReader class parameters to be ("sudoku.csv", False)
