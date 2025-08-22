@@ -64,7 +64,7 @@ pub fn async_speedtest(puzzle_reader: &puzzle_reader::PuzzleReader, verbose: boo
 
 #[pyfunction]
 #[pyo3(signature = (puzzle_reader, verbose = false))]
-pub fn synchronous_speedtest(puzzle_reader: &puzzle_reader::PuzzleReader, verbose: bool) {
+pub fn synchronous_speedtest(puzzle_reader: &puzzle_reader::PuzzleReader, verbose: bool) -> pyo3::PyResult<()> {
     println!("---------------\nStarting Synchronous Speedtest\n---------------");
     let mut solved_puzzles = Vec::new();
     let start_solve = std::time::Instant::now();
@@ -81,7 +81,7 @@ pub fn synchronous_speedtest(puzzle_reader: &puzzle_reader::PuzzleReader, verbos
             Ok(puzz) => {
                 pc_solved = puzz.clone();
             },
-            Err(_e) => {println!("Found an unsolvable puzzle at line {}", i + 2); break;},
+            Err(_e) => return Err(pyo3::exceptions::PyValueError::new_err("The entered puzzle is invalid!"))
 
         }
         if verbose {
@@ -104,4 +104,5 @@ pub fn synchronous_speedtest(puzzle_reader: &puzzle_reader::PuzzleReader, verbos
     } else {
         println!("Validated {} puzzles in {:?}", puzzle_reader.size, start_validate.elapsed());
     }
+    Ok(())
 }

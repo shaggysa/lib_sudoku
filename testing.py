@@ -8,6 +8,7 @@ def tests():
     )
     sudoku.async_speedtest(reader)
     sudoku.synchronous_speedtest(reader)
+    #sudoku.print_puzz(sudoku.solve([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1]))
 
     num_hints = 24
     start_gen = time.time()

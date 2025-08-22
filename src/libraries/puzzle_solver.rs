@@ -7,6 +7,66 @@ pub(crate) struct Puzzle {
     pub current_pos: Vec<i8>,
     pub solved: bool,
 }
+
+fn no_repeats(items: Vec<u8>) -> bool {
+    let mut seen: [bool;10] = [false;10];
+    for item in items.iter() {
+        if *item == 0 {
+            continue;
+        }
+        if seen[*item as usize] {
+            return false;
+        }
+        seen[*item as usize] = true;
+    }
+    true
+}
+
+#[pyfunction]
+fn is_valid(puzzle: Vec<u8>) -> PyResult<bool> {
+    if puzzle.len() != 81 {
+        return Err(pyo3::exceptions::PyValueError::new_err("A puzzle must have a length of 81!"));
+    }
+
+    for i in 0..9 { //check rows
+        if !no_repeats(Vec::from(&puzzle[i * 9..(i + 1) * 9])) {
+            return Ok(false);
+        }
+
+        if !no_repeats(puzzle.iter().skip(i) //check columns
+            .step_by(9)
+            .copied()
+            .collect::<Vec<u8>>()) {
+            return Ok(false);
+        }
+        
+    }
+    
+    let mut row = 0;
+    let mut col = 0;
+    
+    loop {
+        let mut square_to_check: Vec<u8> = vec![0; 9];
+        for r in row..row + 3 {
+            for c in col..col + 3 {
+                square_to_check.push(puzzle[r * 9 + c])
+            }
+        }
+        if !no_repeats(square_to_check.clone()) {
+            return Ok(false);
+        }
+        if row == 6 {
+            if col == 6 {
+                break;
+            }
+            row = 0;
+            col += 3;
+        }
+        row += 3;
+    }
+    Ok(true)
+}
+
 pub(crate) fn get_possibilities(puzz: &Vec<u8>, pos: u8) -> Vec<u8> {
     let mut possibilities: Vec<u8> = Vec::new();
     let mut seen: [bool; 10] = [false; 10];
@@ -104,7 +164,7 @@ pub(crate) fn get_possibilities_as_array(puzz: &Vec<u8>, pos: usize) -> [bool; 1
 #[pyfunction]
 pub fn solve(puzz: Vec<u8>) -> PyResult<Vec<u8>> {
     if puzz.len() != 81 {
-        return Err(pyo3::exceptions::PyValueError::new_err("A puzzle must have a length of 81!"));
+        return Err(pyo3::exceptions::PyValueError::new_err("Your puzzle must have a length of 81!"));
     }
 
     let mut p = solver_prep(puzz);
@@ -112,12 +172,16 @@ pub fn solve(puzz: Vec<u8>) -> PyResult<Vec<u8>> {
         return Ok(p.puzz);
     }
 
+    if !is_valid(p.puzz.clone())? {
+        return Err(pyo3::exceptions::PyValueError::new_err("The puzzle is illegal!"));
+    }
+
     let mut position: i8 = 0;
     let max_pos = p.blank_positions.len();
     let mut progressed_forward = true;
     loop {
         if position < 0 {
-            return Err(pyo3::exceptions::PyValueError::new_err(format!("The following puzzle is unsolvable!\n{:?}", p.puzz)));
+            return Err(pyo3::exceptions::PyValueError::new_err("Your puzzle is unsolvable!"));
         } else if position == max_pos as i8 {
             p.solved = true;
             return Ok(p.puzz);
@@ -160,3 +224,4 @@ pub fn solve(puzz: Vec<u8>) -> PyResult<Vec<u8>> {
 pub async fn async_solve(puzz: Vec<u8>) -> PyResult<Vec<u8>> {
     solve(puzz)
 }
+
