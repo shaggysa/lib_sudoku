@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "lib_sudoku"
-version = "2.0.0"
+version = "2.1.0"
 requires-python = ">=3.8"
 description = "A blazing fast sudoku library buit in rust"
 readme = "README.md"

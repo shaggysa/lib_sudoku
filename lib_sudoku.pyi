@@ -51,7 +51,7 @@ if TYPE_CHECKING:
             """
             ...
 
-    def print_puzz(puzzle: list) -> None:
+    def print_puzz(puzzle: bytearray) -> None:
         """
         Prints a puzzle in the correct format.
         :param puzzle:
@@ -77,7 +77,7 @@ if TYPE_CHECKING:
         """
         ...
 
-    def solve(puzzle: list) -> bytearray:
+    def solve(puzzle: bytearray) -> bytearray:
         """
         Takes in a puzzle in the form of a row-major list and returns a solved version.
 
@@ -97,6 +97,18 @@ if TYPE_CHECKING:
             num_hints (int): The number of hints the final puzzle will have. Must be between 23 and 40.
 
         returns:
-        bytearray: The puzzle with the specified number of hints.
+            bytearray: The puzzle with the specified number of hints.
+        """
+        ...
+
+    def is_valid(puzzle:bytearray) -> bool:
+        """
+        Checks if a puzzle is legal.
+
+        Args:
+            puzzle (bytearray): The puzzle you want to check.
+
+        returns:
+            bool: True if the puzzle is valid, false otherwise.
         """
         ...

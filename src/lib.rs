@@ -12,6 +12,7 @@ fn lib_sudoku(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(libraries::speedtest::async_speedtest, m)?)?;
     m.add_function(wrap_pyfunction!(libraries::puzzle_solver::solve, m)?)?;
     m.add_function(wrap_pyfunction!(libraries::puzzle_generator::gen_unsolved, m)?)?;
+    m.add_function(wrap_pyfunction!(libraries::puzzle_solver::is_valid, m)?)?;
     Ok(())
 
 }

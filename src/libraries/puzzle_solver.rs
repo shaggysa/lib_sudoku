@@ -23,7 +23,7 @@ fn no_repeats(items: Vec<u8>) -> bool {
 }
 
 #[pyfunction]
-fn is_valid(puzzle: Vec<u8>) -> PyResult<bool> {
+pub(crate) fn is_valid(puzzle: Vec<u8>) -> PyResult<bool> {
     if puzzle.len() != 81 {
         return Err(pyo3::exceptions::PyValueError::new_err("A puzzle must have a length of 81!"));
     }
