@@ -68,7 +68,7 @@ impl PuzzleReader {
     }
 
     pub fn get_unsolved_puzz(&self, line_num: usize) -> PyResult<Vec<u8>> {
-        Ok(self.solved[line_num - 2].clone())
+        Ok(self.unsolved[line_num - 2].clone())
     }
 
     pub fn get_solved_puzz(&self, line_num: usize) -> PyResult<Vec<u8>> {
