@@ -1,6 +1,8 @@
 use pyo3::{pyfunction, PyResult};
+use std::convert::TryInto;
+
 pub(crate) struct Puzzle { 
-    pub puzz: Vec<u8>,
+    pub puzz: [u8; 81],
     pub blank_positions: Vec<u8>,
     pub possibilities: Vec<Vec<u8>>,
     pub cached_possibilities: Vec<[bool;10]>,
@@ -24,9 +26,10 @@ fn no_repeats(items: Vec<u8>) -> bool {
 
 #[pyfunction]
 pub(crate) fn is_valid(puzzle: Vec<u8>) -> PyResult<bool> {
-    if puzzle.len() != 81 {
-        return Err(pyo3::exceptions::PyValueError::new_err("A puzzle must have a length of 81!"));
-    }
+    backend_is_valid(puzzle.try_into().expect("A puzzle must have a length of 81!"))
+}
+
+pub(crate) fn backend_is_valid(puzzle: [u8; 81]) -> PyResult<bool> {
 
     for i in 0..9 { //check rows
         if !no_repeats(Vec::from(&puzzle[i * 9..(i + 1) * 9])) {
@@ -67,7 +70,7 @@ pub(crate) fn is_valid(puzzle: Vec<u8>) -> PyResult<bool> {
     Ok(true)
 }
 
-pub(crate) fn get_possibilities(puzz: &Vec<u8>, pos: u8) -> Vec<u8> {
+pub(crate) fn get_possibilities(puzz: &[u8; 81], pos: u8) -> Vec<u8> {
     let mut possibilities: Vec<u8> = Vec::new();
     let mut seen: [bool; 10] = [false; 10];
     let row: usize = (pos / 9) as usize;
@@ -92,7 +95,7 @@ pub(crate) fn get_possibilities(puzz: &Vec<u8>, pos: u8) -> Vec<u8> {
     }
     possibilities
 }
-fn solver_prep(puzz: Vec<u8>) -> Puzzle {
+fn solver_prep(puzz: [u8; 81]) -> Puzzle {
     let mut p: Puzzle = Puzzle {
         puzz,
         blank_positions: Vec::new(),
@@ -143,7 +146,7 @@ fn solver_prep(puzz: Vec<u8>) -> Puzzle {
     p
 }
 
-pub(crate) fn get_possibilities_as_array(puzz: &Vec<u8>, pos: usize) -> [bool; 10] {
+pub(crate) fn get_possibilities_as_array(puzz: &[u8; 81], pos: usize) -> [bool; 10] {
     let mut seen: [bool; 10] = [true; 10];
     let row: usize = pos / 9;
     let col: usize = pos % 9;
@@ -161,18 +164,20 @@ pub(crate) fn get_possibilities_as_array(puzz: &Vec<u8>, pos: usize) -> [bool; 1
     }
     seen
 }
+
 #[pyfunction]
-pub fn solve(puzz: Vec<u8>) -> PyResult<Vec<u8>> {
-    if puzz.len() != 81 {
-        return Err(pyo3::exceptions::PyValueError::new_err("Your puzzle must have a length of 81!"));
-    }
+pub fn solve(puzz: Vec<u8>) -> PyResult<[u8; 81]> {
+    backend_solve(puzz.try_into().expect("A puzzle must have a length of 81!"))
+}
+
+pub fn backend_solve(puzz: [u8; 81]) -> PyResult<[u8; 81]> {
 
     let mut p = solver_prep(puzz);
     if p.solved {
         return Ok(p.puzz);
     }
 
-    if !is_valid(p.puzz.clone())? {
+    if !backend_is_valid(p.puzz.clone())? {
         return Err(pyo3::exceptions::PyValueError::new_err("The puzzle is illegal!"));
     }
 
@@ -221,7 +226,7 @@ pub fn solve(puzz: Vec<u8>) -> PyResult<Vec<u8>> {
     }
 }
 
-pub async fn async_solve(puzz: Vec<u8>) -> PyResult<Vec<u8>> {
-    solve(puzz)
+pub async fn async_solve(puzz: [u8; 81]) -> PyResult<[u8; 81]> {
+    backend_solve(puzz)
 }
 

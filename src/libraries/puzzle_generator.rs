@@ -12,7 +12,7 @@ pub enum Order {
     RANDOM,
 }
 
-fn alt_get_possibilities(puzz: &Vec<u8>, pos: u8, order: &Order) -> Vec<u8> {
+fn alt_get_possibilities(puzz: &[u8; 81], pos: u8, order: &Order) -> Vec<u8> {
     let mut possibilities: Vec<u8> = Vec::new();
     let mut seen: [bool; 10] = [false; 10];
     let row: usize = (pos / 9) as usize;
@@ -49,7 +49,7 @@ fn alt_get_possibilities(puzz: &Vec<u8>, pos: u8, order: &Order) -> Vec<u8> {
     possibilities
 }
 
-fn alt_solver_prep(puzz: Vec<u8>, order: Order) -> Puzzle {
+fn alt_solver_prep(puzz: [u8;81], order: Order) -> Puzzle {
     let mut p: Puzzle = Puzzle {
         puzz,
         blank_positions: Vec::new(),
@@ -100,7 +100,7 @@ fn alt_solver_prep(puzz: Vec<u8>, order: Order) -> Puzzle {
     p
 }
 
-pub fn alt_solve(puzz: Vec<u8>, order: Order) -> PyResult<Vec<u8>> {
+pub fn alt_solve(puzz: [u8; 81], order: Order) -> PyResult<[u8; 81]> {
     if puzz.len() != 81 {
         return Err(pyo3::exceptions::PyValueError::new_err("A puzzle must have a length of 81!"));
     }
@@ -155,17 +155,17 @@ pub fn alt_solve(puzz: Vec<u8>, order: Order) -> PyResult<Vec<u8>> {
     }
 }
 
-fn gen_random_solved() -> Vec<u8> {
-    let puzzle: Vec<u8> = vec![0; 81];
+fn gen_random_solved() -> [u8; 81] {
+    let puzzle: [u8; 81] = [0; 81];
     alt_solve(puzzle, RANDOM).unwrap()
 }
 
-fn is_legal(puzzle: &Vec<u8>) -> bool {
-    puzzle_solver::solve(puzzle.clone()).unwrap() == alt_solve(puzzle.clone(), REVERSE).unwrap()
+fn is_legal(puzzle: &[u8; 81]) -> bool {
+    puzzle_solver::backend_solve(puzzle.clone()).unwrap() == alt_solve(puzzle.clone(), REVERSE).unwrap()
 }
 
 #[pyo3::pyfunction]
-pub fn gen_unsolved(num_hints: usize) -> PyResult<Vec<u8>> {
+pub fn gen_unsolved(num_hints: usize) -> PyResult<[u8; 81]> {
 
     if num_hints < 23 || num_hints > 40 {
         return Err(pyo3::exceptions::PyValueError::new_err("Please specify a value between 23 and 40 for num_hints."));

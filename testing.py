@@ -4,7 +4,7 @@ import time
 
 def tests():
     reader = sudoku.PuzzleReader(
-        "https://raw.githubusercontent.com/shaggysa/lib_sudoku/master/puzzles.csv", True
+        "puzzles.csv", False
     )
     sudoku.async_speedtest(reader)
     sudoku.synchronous_speedtest(reader)

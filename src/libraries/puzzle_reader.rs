@@ -5,8 +5,8 @@ use std::io::{Write, stdout};
 #[derive(Clone)]
 pub struct PuzzleReader {
     pub size: usize,
-    pub unsolved: Vec<Vec<u8>>,
-    pub solved: Vec<Vec<u8>>,
+    pub unsolved: Vec<[u8; 81]>,
+    pub solved: Vec<[u8; 81]>,
 }
 
 #[pymethods]
@@ -14,11 +14,7 @@ impl PuzzleReader {
     #[new]
     pub fn load_puzzles(file: &str, from_url: bool) -> PyResult<Self> {
 
-        let mut p = PuzzleReader {
-            size: 0,
-            unsolved: Vec::new(),
-            solved: Vec::new(),
-        };
+
 
         let puzzles_string: String;
 
@@ -38,6 +34,14 @@ impl PuzzleReader {
             println!("Read {} in {:?}", file, read_start.elapsed());
         }
 
+        let num_puzzles = (puzzles_string.len() - 15) * 81/82/(81*2);
+
+        let mut p = PuzzleReader {
+            size: num_puzzles,
+            unsolved: Vec::with_capacity(num_puzzles),
+            solved: Vec::with_capacity(num_puzzles),
+        };
+
         let parse_start = std::time::Instant::now();
         let mut first_line = true;
         for line in puzzles_string.lines() {
@@ -45,9 +49,8 @@ impl PuzzleReader {
                 first_line = false;
                 continue;
             }
-            p.size += 1;
-            let mut unsolved_list = vec![0;81];
-            let mut solved_list = vec![0; 81];
+            let mut unsolved_list: [u8; 81] = [0; 81];
+            let mut solved_list: [u8; 81] = [0; 81];
             let line_bytes = line.as_bytes();
 
             if line_bytes.len() == 163 && line_bytes[81] == 0x2c { //0x2c is the utf-8 char for a comma
@@ -67,17 +70,21 @@ impl PuzzleReader {
         Ok(p)
     }
 
-    pub fn get_unsolved_puzz(&self, line_num: usize) -> PyResult<Vec<u8>> {
+    pub fn get_unsolved_puzz(&self, line_num: usize) -> PyResult<[u8; 81]> {
         Ok(self.unsolved[line_num - 2].clone())
     }
 
-    pub fn get_solved_puzz(&self, line_num: usize) -> PyResult<Vec<u8>> {
+    pub fn get_solved_puzz(&self, line_num: usize) -> PyResult<[u8; 81]> {
         Ok(self.solved[line_num - 2].clone())
     }
 }
 
 #[pyfunction]
 pub fn print_puzz(puzz: Vec<u8>) {
+    backend_print_puzz(puzz.try_into().expect("A puzzle must have a length of 81!"));
+}
+
+pub fn backend_print_puzz(puzz: [u8; 81]) {
     let mut lock = stdout().lock();
 
     for row in 0..9 {

@@ -1,6 +1,6 @@
 use pyo3::pyfunction;
 use crate::libraries::puzzle_reader;
-use crate::libraries::puzzle_solver::{async_solve, solve};
+use crate::libraries::puzzle_solver::{async_solve, backend_solve};
 
 
 #[pyfunction]
@@ -31,7 +31,7 @@ pub fn async_speedtest(puzzle_reader: &puzzle_reader::PuzzleReader, verbose: boo
     let start_validate = std::time::Instant::now();
 
     for i in 0..solved_puzzles.len() {
-        let pc_solved: Vec<u8>;
+        let pc_solved: [u8; 81];
 
         match &solved_puzzles[i] {
             Ok(puzz) => {
@@ -43,9 +43,9 @@ pub fn async_speedtest(puzzle_reader: &puzzle_reader::PuzzleReader, verbose: boo
         if verbose {
             println!("\nLine {}:", i + 2);
             println!("Unsolved: ",);
-            puzzle_reader::print_puzz(puzzle_reader.unsolved[i].clone());
+            puzzle_reader::backend_print_puzz(puzzle_reader.unsolved[i].clone());
             println!("\nSolved:");
-            puzzle_reader::print_puzz(pc_solved.clone());
+            puzzle_reader::backend_print_puzz(pc_solved.clone());
 
 
         }
@@ -66,16 +66,16 @@ pub fn async_speedtest(puzzle_reader: &puzzle_reader::PuzzleReader, verbose: boo
 #[pyo3(signature = (puzzle_reader, verbose = false))]
 pub fn synchronous_speedtest(puzzle_reader: &puzzle_reader::PuzzleReader, verbose: bool) -> pyo3::PyResult<()> {
     println!("---------------\nStarting Synchronous Speedtest\n---------------");
-    let mut solved_puzzles = Vec::new();
+    let mut solved_puzzles: Vec<pyo3::PyResult<[u8; 81]>> = Vec::with_capacity(puzzle_reader.size);
     let start_solve = std::time::Instant::now();
     for i in 0..puzzle_reader.unsolved.len() {
-        solved_puzzles.push(solve(puzzle_reader.unsolved[i].clone()));
+        solved_puzzles.push(backend_solve(puzzle_reader.unsolved[i].clone()));
     }
     let solve_time = start_solve.elapsed();
     let start_validate = std::time::Instant::now();
 
     for i in 0..solved_puzzles.len() {
-        let pc_solved: Vec<u8>;
+        let pc_solved: [u8; 81];
 
         match &solved_puzzles[i] {
             Ok(puzz) => {
@@ -87,9 +87,9 @@ pub fn synchronous_speedtest(puzzle_reader: &puzzle_reader::PuzzleReader, verbos
         if verbose {
             println!("\nLine {}:", i + 2);
             println!("Unsolved: ",);
-            puzzle_reader::print_puzz(puzzle_reader.unsolved[i].clone());
+            puzzle_reader::backend_print_puzz(puzzle_reader.unsolved[i].clone());
             println!("\nSolved:");
-            puzzle_reader::print_puzz(pc_solved.clone());
+            puzzle_reader::backend_print_puzz(pc_solved.clone());
 
 
         }

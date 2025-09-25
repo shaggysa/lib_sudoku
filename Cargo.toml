@@ -3,10 +3,6 @@ name = "lib-sudoku"
 version = "1.0.0"
 edition = "2024"
 
-[[bin]]
-name = "lib-sudoku"
-path = "src/main.rs"
-
 [lib]
 name = "lib_sudoku"
 crate-type = ["cdylib"]
