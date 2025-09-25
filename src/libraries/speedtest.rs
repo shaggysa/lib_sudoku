@@ -1,6 +1,6 @@
 use pyo3::pyfunction;
 use crate::libraries::puzzle_reader;
-use crate::libraries::puzzle_solver::{async_solve, backend_solve};
+use crate::libraries::puzzle_solver::{async_solve, manual_solve, manual_solver_prep, Puzzle};
 
 
 #[pyfunction]
@@ -68,8 +68,30 @@ pub fn synchronous_speedtest(puzzle_reader: &puzzle_reader::PuzzleReader, verbos
     println!("---------------\nStarting Synchronous Speedtest\n---------------");
     let mut solved_puzzles: Vec<pyo3::PyResult<[u8; 81]>> = Vec::with_capacity(puzzle_reader.size);
     let start_solve = std::time::Instant::now();
+
+    let mut p = Puzzle {
+        puzz: [0; 81],
+        blank_positions: Vec::new(),
+        possibilities: Vec::new(),
+        cached_possibilities: Vec::new(),
+        current_pos: Vec::new(),
+        solved: false,
+    };
+
     for i in 0..puzzle_reader.unsolved.len() {
-        solved_puzzles.push(backend_solve(puzzle_reader.unsolved[i].clone()));
+        p.puzz = puzzle_reader.unsolved[i];
+        manual_solver_prep(&mut p);
+        if p.solved {
+            solved_puzzles.push(Ok(p.puzz))
+        } else {
+            solved_puzzles.push(manual_solve(&mut p));
+        }
+
+        p.blank_positions.clear();
+        p.possibilities.clear();
+        p.cached_possibilities.clear();
+        p.current_pos.clear();
+        p.solved = false;
     }
     let solve_time = start_solve.elapsed();
     let start_validate = std::time::Instant::now();
